@@ -1,0 +1,61 @@
+# Valheim dedicated server + web admin panel (+ optional playit.gg tunnel).
+# Every value marked ${...} comes from .env (copy .env.example). Game settings live in valheim.env.
+# Full explanation of each option: README.md
+name: valheim
+
+services:
+  valheim:
+    image: ghcr.io/lloesche/valheim-server
+    container_name: valheim
+    env_file: valheim.env # Game server settings (also editable from the panel)
+    ports:
+      - "2456-2457:2456-2457/udp" # Game ports (forward them on your router to play over the Internet without crossplay/playit)
+    volumes:
+      - ${PROJECT_DIR}/data/config:/config # Worlds, backups, admin/ban lists, BepInEx mods and their .cfg
+      - ${PROJECT_DIR}/data/opt:/opt/valheim # Downloaded server files (~1-2 GB)
+    networks:
+      vhnet:
+        ipv4_address: 172.31.0.10 # Fixed IP: the panel reaches status.json and RCON here
+    stop_grace_period: 2m # Time to save the world before Docker kills the container
+    logging: # Cap the log size: at most 3 files of 20 MB
+      driver: json-file
+      options: { max-size: "20m", max-file: "3" }
+    restart: unless-stopped
+
+  panel:
+    build: ./panel
+    container_name: valheim-panel
+    ports:
+      - "${PANEL_PORT:-8082}:3000" # Panel: http://localhost:8082 (and from devices on your LAN)
+    environment:
+      LOCAL_ADDRESS: ${LOCAL_ADDRESS:-} # LAN address shown in the panel, e.g. 192.168.1.50:2456
+      PUBLIC_ADDRESS: ${PUBLIC_ADDRESS:-} # Public address (playit tunnel or your public IP), e.g. xyz.joinmc.link:12345
+      TZ: ${TZ:-UTC} # Same time zone as the game server log
+      PANEL_LANG: ${PANEL_LANG:-en} # Language of in-game messages sent by the panel (es | en)
+      RCON_HOST: "172.31.0.10" # ValheimRcon mod, only reachable from the internal network
+      RCON_PORT: "2458"
+      RCON_PASSWORD: ${RCON_PASSWORD} # Shared with the RCON mod (the panel writes it into its .cfg)
+      PANEL_PASSWORD: ${PANEL_PASSWORD} # Password to log into the panel (empty = no password, not recommended)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Start/stop/restart the server, read its logs and stats
+      - ${PROJECT_DIR}:/project # Edit valheim.env and re-create the server with "docker compose"
+      - ${PROJECT_DIR}/data/config:/config # Same data as the game server (worlds, mods, backups)
+    networks:
+      - vhnet
+    restart: unless-stopped
+
+  playit:
+    image: ghcr.io/playit-cloud/playit-agent:1.0
+    container_name: valheim-playit
+    profiles: ["playit"] # Only started with: docker compose --profile playit up -d
+    environment:
+      SECRET_KEY: ${PLAYIT_SECRET_KEY:-} # From https://playit.gg (Agents)
+    networks:
+      - vhnet
+    restart: unless-stopped
+
+networks:
+  vhnet:
+    ipam:
+      config:
+        - subnet: 172.31.0.0/24 # Change it (and the IPs above + RCON_WHITELIST) only if it clashes with your network

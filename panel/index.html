@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel Valheim</title>
+<script src="/i18n.js"></script>
+<style>
+  :root { --bg:#14161b; --card:#1e2128; --card2:#262a33; --line:#30343e; --text:#e9e7e2; --muted:#9aa0ab;
+          --gold:#d9a441; --green:#4caf62; --red:#cf4a3f; --blue:#4a86d8; --amber:#d39a2c; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 system-ui, "Segoe UI", sans-serif; }
+  .wrap { max-width:1100px; margin:0 auto; padding:20px 16px 110px; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  h1 { font-size:22px; margin:0; letter-spacing:.02em; }
+  h1 span { color:var(--gold); }
+  .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; background:var(--card); border:1px solid var(--line); font-weight:600; }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); }
+  .dot.ok { background:var(--green); box-shadow:0 0 8px var(--green); } .dot.wait { background:var(--amber); } .dot.bad { background:var(--red); }
+  nav { display:flex; gap:4px; flex-wrap:wrap; border-bottom:1px solid var(--line); margin-bottom:18px; }
+  nav button { background:none; color:var(--muted); border-radius:8px 8px 0 0; padding:10px 14px; border-bottom:2px solid transparent; }
+  nav button.active { color:var(--text); border-bottom-color:var(--gold); background:var(--card); }
+  [hidden] { display:none !important; } /* si no, clases con display (como .banner) lo anulan */
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+  .grid section { margin-bottom:0; }
+  h2 { font-size:13px; margin:0 0 12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .wide { grid-column:1 / -1; }
+  button { border:0; border-radius:8px; padding:9px 14px; font:inherit; font-weight:600; color:#fff; background:#3a3f4b; cursor:pointer; }
+  button:hover:not(:disabled) { filter:brightness(1.15); }
+  button:disabled { opacity:.5; cursor:default; }
+  .on { background:var(--green); } .off { background:var(--red); } .info { background:var(--blue); } .warn { background:var(--amber); } .gold { background:var(--gold); color:#1a1a1a; }
+  .small { padding:5px 10px; font-size:13px; }
+  .btns { display:flex; flex-wrap:wrap; gap:8px; }
+  .muted { color:var(--muted); } .note { color:var(--muted); font-size:13px; margin:8px 0 0; }
+  input, select, textarea { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:9px 11px; font:inherit; max-width:100%; }
+  textarea { width:100%; font:13px/1.45 ui-monospace, Consolas, monospace; resize:vertical; }
+  label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .row > input { flex:1; min-width:160px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; }
+  .kpi { background:var(--card2); border-radius:10px; padding:12px; }
+  .kpi .v { font-size:22px; font-weight:700; margin-top:2px; }
+  .kpi .l { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .bar { height:6px; background:var(--bg); border-radius:3px; margin-top:8px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:var(--gold); width:0; transition:width .4s; }
+  .addr { display:grid; gap:10px; }
+  .addr > div { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .addr .label { min-width:230px; color:var(--muted); }
+  code.big { font:700 18px ui-monospace, Consolas, monospace; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:6px 12px; }
+  code.big.pending { font:italic 14px system-ui, sans-serif; color:var(--muted); }
+  code.join { color:var(--gold); font-size:22px; letter-spacing:.15em; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:9px 8px; border-top:1px solid var(--line); vertical-align:middle; }
+  th { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; border-top:0; }
+  .tablewrap { overflow-x:auto; }
+  .tag { display:inline-block; font-size:11px; padding:2px 7px; border-radius:6px; background:var(--card2); color:var(--muted); margin:2px 4px 2px 0; }
+  .tag.ok { background:#1f3a26; color:#8fdc9f; } .tag.off { background:#3d2220; color:#f0a39b; } .tag.gold { background:#3b311b; color:var(--gold); }
+  .mod { display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--line); align-items:flex-start; }
+  .mod:first-child { border-top:0; }
+  .mod img { width:56px; height:56px; border-radius:8px; flex:none; background:var(--card2); }
+  .mod .body { flex:1; min-width:0; }
+  .mod .title { font-weight:700; }
+  .mod .desc { color:var(--muted); font-size:13px; margin:2px 0 4px; }
+  .switch { position:relative; width:46px; height:26px; flex:none; }
+  .switch input { opacity:0; width:0; height:0; }
+  .switch span { position:absolute; inset:0; background:#4a4f5b; border-radius:13px; cursor:pointer; transition:.2s; }
+  .switch span::before { content:""; position:absolute; width:20px; height:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+  .switch input:checked + span { background:var(--green); }
+  .switch input:checked + span::before { transform:translateX(20px); }
+  .banner { background:#3b311b; border:1px solid #6b5626; color:#f3d48f; border-radius:10px; padding:10px 14px; margin-bottom:16px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  #logbox { background:#0c0d10; border:1px solid var(--line); border-radius:10px; height:60vh; overflow:auto; padding:10px 12px; font:12.5px/1.5 ui-monospace, Consolas, monospace; white-space:pre-wrap; word-break:break-word; }
+  #logbox .err { color:#ff8a80; } #logbox .conn { color:#8fdc9f; } #logbox .save { color:#9cc4ff; } #logbox .code { color:var(--gold); font-weight:700; }
+  #toast { position:fixed; left:16px; right:16px; bottom:16px; max-width:1068px; margin:0 auto; background:#0c0d10; border:1px solid var(--line);
+           border-radius:10px; padding:10px 14px; font:13px/1.4 ui-monospace, Consolas, monospace; color:var(--muted); white-space:pre-wrap; max-height:30vh; overflow:auto; }
+  #toast.err { color:#ff8a80; } #toast.ok { color:#8fdc9f; }
+  .listbox { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+  .listbox .item { display:flex; justify-content:space-between; align-items:center; gap:8px; background:var(--card2); border-radius:8px; padding:6px 10px; font-family:ui-monospace, Consolas, monospace; font-size:13px; }
+  .checks { display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:4px; }
+  .checks label { display:flex; align-items:center; gap:6px; margin:0; color:var(--text); font-size:14px; }
+  .pcards { display:grid; grid-template-columns:repeat(auto-fill, minmax(330px, 1fr)); gap:12px; }
+  .pcard { background:var(--card2); border:1px solid var(--line); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .phead { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+  .hprow { display:flex; align-items:center; gap:10px; } .hprow .bar { flex:1; height:8px; margin:0; }
+  .modbox summary, details summary { cursor:pointer; color:var(--muted); font-size:13px; }
+  .actbox { margin-top:4px; padding:12px; background:var(--bg); border:1px solid var(--line); border-radius:10px; }
+  .toggle { display:inline-flex; align-items:center; gap:8px; margin:0; padding:9px 14px; border-radius:8px; background:#3a3f4b; color:var(--text); font-weight:600; font-size:15px; cursor:pointer; }
+  .toggle:has(input:checked) { background:var(--green); color:#fff; }
+  .maplayout { display:grid; grid-template-columns:1fr 260px; gap:14px; align-items:start; }
+  .maplayout .item { font-family:system-ui; cursor:pointer; }
+  .maplayout .item.sel { outline:2px solid var(--gold); }
+  .qgroups { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+  .qgroups > div { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .qgroups > div > .muted { width:80px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  /* Móvil */
+  @media (max-width: 640px) {
+    .wrap { padding:12px 12px 120px; }
+    nav { flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    nav button { flex:none; padding:10px 12px; }
+    .grid { grid-template-columns:1fr; }
+    .addr .label { min-width:0; width:100%; }
+    code.big { font-size:16px; word-break:break-all; }
+    button { padding:11px 14px; }
+    .small { padding:8px 11px; font-size:14px; }
+    .kpis { grid-template-columns:repeat(2, 1fr); }
+    .kpi .v { font-size:18px; }
+    .pcards { grid-template-columns:1fr; }
+    .maplayout { grid-template-columns:1fr; }
+    .qgroups > div > .muted { width:100%; }
+    th, td { padding:8px 6px; }
+    #toast { left:8px; right:8px; bottom:8px; }
+    input, select { font-size:16px; } /* evita el zoom automático de iOS */
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>⚔️ Panel <span>Valheim</span></h1>
+    <div class="btns" style="align-items:center">
+      <div class="pill"><span class="dot" id="hdrDot"></span><span id="hdrText">Conectando…</span></div>
+      <select id="langSel" title="Idioma" style="padding:6px 8px"><option value="es">🌐 ES</option><option value="en">🌐 EN</option></select>
+      <button class="small" id="logoutBtn" title="Cerrar sesión del panel">🚪 Salir</button>
+    </div>
+  </header>
+
+  <div class="banner" id="crossplayBanner" hidden>
+    <span>📡 El crossplay ha perdido la conexión con PlayFab (<b id="pfErrors">0</b> fallos en 10 min). Mientras dure, nadie podrá entrar con el código. <span id="pfAuto"></span></span>
+    <button class="warn small" data-server="restart">Reiniciar ahora</button>
+  </div>
+
+  <div class="banner" id="restartBanner" hidden>
+    <span>⚠️ Hay cambios en los mods que se aplicarán al reiniciar el servidor.</span>
+    <button class="warn small" data-server="restart">Reiniciar ahora</button>
+  </div>
+
+  <nav id="tabs">
+    <button data-tab="inicio" class="active">🏠 Inicio</button>
+    <button data-tab="jugadores">👥 Jugadores</button>
+    <button data-tab="mapa">🗺️ Mapa</button>
+    <button data-tab="objetos">🎁 Objetos</button>
+    <button data-tab="mundo">⚔️ Mundo</button>
+    <button data-tab="avisos">📢 Avisos</button>
+    <button data-tab="ajustes">⚙️ Ajustes</button>
+    <button data-tab="mods">🧩 Mods y copias</button>
+    <button data-tab="consola">⌨️ Consola</button>
+  </nav>
+
+  <!-- INICIO: lo del día a día -->
+  <div class="tab" id="tab-inicio">
+    <section>
+      <h2>Estado</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Estado</div><div class="v" id="kState">—</div></div>
+        <div class="kpi"><div class="l">Jugadores</div><div class="v" id="kPlayers">—</div></div>
+        <div class="kpi"><div class="l">Encendido desde hace</div><div class="v" id="kUptime">—</div></div>
+        <div class="kpi"><div class="l">Último guardado</div><div class="v" id="kSaved">—</div></div>
+        <div class="kpi"><div class="l">CPU</div><div class="v" id="kCpu">—</div><div class="bar"><i id="bCpu"></i></div></div>
+        <div class="kpi"><div class="l">Memoria</div><div class="v" id="kMem">—</div><div class="bar"><i id="bMem"></i></div></div>
+      </div>
+      <p class="note"><span id="kWorld"></span> · Versión <span id="kVersion">—</span></p>
+    </section>
+
+    <section>
+      <h2>Cómo conectarse</h2>
+      <div class="addr">
+        <div><span class="label">🔑 Código crossplay (desde cualquier sitio)</span><code class="big join" id="addrCode">…</code><button class="small" data-copy="addrCode">Copiar</button></div>
+        <div><span class="label" id="addrLocalLabel">🏠 En casa (misma Wi-Fi)</span><code class="big" id="addrLocal">…</code><button class="small" data-copy="addrLocal">Copiar</button></div>
+        <div><span class="label">🌍 Desde fuera (túnel playit)</span><code class="big" id="addrPublic">…</code><button class="small" data-copy="addrPublic">Copiar</button></div>
+        <div><span class="label">📱 Este panel en el móvil (misma Wi-Fi)</span><code class="big" id="panelUrl">…</code><button class="small" data-copy="panelUrl">Copiar</button></div>
+      </div>
+      <p class="note">El código crossplay cambia al reiniciar y, a veces, también con el servidor en marcha; aquí verás siempre el actual. Contraseña del juego: en ⚙️ Ajustes.</p>
+      <p class="note" id="crossplayIpNote" hidden>Con crossplay la IP local (192.168.…) no funciona, ni siquiera en casa: Valheim busca el servidor por la IP pública. Usa el código o «Unirse por IP» con la dirección de arriba.</p>
+      <details style="margin-top:12px">
+        <summary>💬 Mensaje para tus amigos (WhatsApp / Discord)</summary>
+        <textarea id="friendMsg" rows="9" style="margin-top:8px"></textarea>
+        <div class="btns" style="margin-top:8px"><button class="info small" id="copyFriend">📋 Copiar mensaje</button></div>
+      </details>
+    </section>
+
+    <section>
+      <h2>Control del servidor</h2>
+      <div class="btns">
+        <button class="on" data-server="start">▶ Iniciar</button>
+        <button class="warn" data-server="restart" data-confirm>🔄 Reiniciar ya</button>
+        <button class="off" data-server="stop" data-confirm>⏹ Parar</button>
+        <button class="info" data-rconbtn="save">💾 Guardar mundo ahora</button>
+        <button class="info" id="quickBackup">🗄 Copia de seguridad ahora</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <span class="muted">🔄 Reiniciar avisando a los jugadores:</span>
+        <select id="rwMinutes"><option value="1">En 1 minuto</option><option value="5" selected>En 5 minutos</option><option value="10">En 10 minutos</option></select>
+        <button class="warn" id="rwStart">📢 Avisar y reiniciar</button>
+        <button id="rwCancel" hidden>Cancelar reinicio</button>
+      </div>
+      <p class="note" id="rwInfo">Ven el aviso en el centro de la pantalla (a los 10, 5 y 1 minutos y 10 segundos antes). Se guarda el mundo antes de reiniciar.</p>
+      <p class="note">Al parar o reiniciar, el servidor guarda el mundo antes de apagarse (puede tardar hasta un minuto).</p>
+    </section>
+
+    <div class="grid" style="margin-bottom:16px">
+      <section>
+        <h2>Actividad reciente</h2>
+        <div id="events" class="listbox" style="max-height:340px;overflow:auto"></div>
+      </section>
+      <section>
+        <h2>Últimas 24 horas</h2>
+        <div class="kpis" id="charts" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr))"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- JUGADORES -->
+  <div class="tab" id="tab-jugadores" hidden>
+    <section>
+      <h2>Para todos los conectados</h2>
+      <div class="btns" style="align-items:center">
+        <label class="toggle"><input type="checkbox" id="allImmortal"> 🛡️ Todos inmortales</label>
+        <button id="healAll">❤️ Curar a todos</button>
+        <span class="row" style="gap:6px"><button class="info" id="bringAll">📍 Traer a todos junto a</button><select id="bringTo"></select></span>
+        <span class="row" style="gap:6px"><button class="on" id="kitAll">🎒 Dar a todos el kit</button><select id="kitAllSel"></select></span>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input id="allMsg" placeholder="📢 Aviso para todos (sale en el centro de la pantalla)…">
+        <select id="allMsgMode"><option value="showMessage">En pantalla</option><option value="say">En el chat</option></select>
+        <button class="gold" id="allMsgSend">Enviar</button>
+      </div>
+      <p class="note">Inmortal: el servidor no puede activar el modo dios ni volar (eso solo existe en el juego de cada uno); lo que hace es curaros cada 2 segundos. Un golpe que quite toda la vida de una vez aún puede matar.</p>
+    </section>
+
+    <section>
+      <h2>Conectados ahora <span class="muted" id="pCount"></span></h2>
+      <div id="pOnline" class="pcards"></div>
+      <div id="boxPark" hidden>
+        <div id="actBox" class="actbox" hidden></div>
+        <div id="giveBox" class="actbox" hidden>
+          <b>🎁 Dar objeto a <span id="giveName"></span></b>
+          <div class="row" style="margin-top:8px">
+            <input id="giveItem" placeholder="Busca en español o inglés: espada, madera, Wood…" list="itemList">
+            <input id="giveCount" type="number" min="1" value="1" style="width:90px;flex:none" title="Cantidad">
+            <input id="giveQuality" type="number" min="1" max="4" value="1" style="width:80px;flex:none" title="Calidad (1-4)">
+            <button class="on" id="giveSend">Dar</button><button id="giveCancel">Cerrar</button>
+          </div>
+        </div>
+      </div>
+      <datalist id="itemList"></datalist>
+    </section>
+
+    <section id="rejectedSection" hidden>
+      <h2>🚫 Intentos de entrada rechazados</h2>
+      <div class="tablewrap"><table><thead><tr><th>Cuenta</th><th>Cuándo</th><th>Motivo</th><th>Acciones</th></tr></thead><tbody id="pRejected"></tbody></table></div>
+    </section>
+
+    <section>
+      <h2>Han jugado en este servidor</h2>
+      <div class="tablewrap"><table><thead><tr><th>Nombre</th><th>Tiempo jugado</th><th>Sesiones</th><th>Muertes</th><th>Última vez</th><th>Listas</th></tr></thead><tbody id="pHistory"></tbody></table></div>
+    </section>
+
+    <section>
+      <h2>Admins, baneados y permitidos</h2>
+      <div class="grid">
+        <div><b>⭐ Administradores</b><div class="row" style="margin-top:6px"><input id="in-admin" placeholder="SteamID (76561198…)"><button class="on" data-listadd="admin">Añadir</button></div><div class="listbox" id="list-admin"></div></div>
+        <div><b>⛔ Baneados</b><div class="row" style="margin-top:6px"><input id="in-banned" placeholder="SteamID (76561198…)"><button class="off" data-listadd="banned">Banear</button></div><div class="listbox" id="list-banned"></div></div>
+        <div><b>✅ Permitidos</b><div class="row" style="margin-top:6px"><input id="in-permitted" placeholder="SteamID (76561198…)"><button class="on" data-listadd="permitted">Añadir</button></div><div class="listbox" id="list-permitted"></div></div>
+      </div>
+      <p class="note">Permitidos: si la lista tiene a alguien, <b>solo</b> pueden entrar los que estén en ella. Los cambios se aplican al reiniciar el servidor. Tu SteamID es el número de 17 cifras de tu perfil de Steam (o búscalo en steamid.io).</p>
+    </section>
+  </div>
+
+  <!-- MAPA -->
+  <div class="tab" id="tab-mapa" hidden>
+    <section>
+      <div class="row" style="justify-content:space-between;margin-bottom:8px">
+        <h2 style="margin:0">Mapa en vivo</h2>
+        <div class="btns">
+          <button class="small" id="mapZoomIn">➕</button><button class="small" id="mapZoomOut">➖</button>
+          <button class="small" id="mapFit">🌍 Todo el mundo</button><button class="small" id="mapFollow">🎯 Centrar en jugadores</button>
+          <a id="seedLink" target="_blank" rel="noopener" hidden><button class="small info">🗺️ Mapa completo de la semilla ↗</button></a>
+        </div>
+      </div>
+      <div class="maplayout">
+        <div>
+          <canvas id="mapCanvas" style="width:100%;aspect-ratio:1/1;max-height:75vh;background:#0f1a24;border-radius:10px;cursor:crosshair;touch-action:none;display:block"></canvas>
+          <div class="muted" style="font-size:13px;margin-top:6px" id="mapCoords">Pulsa en el mapa para marcar un punto o llevar a alguien. Rueda o botones para el zoom, arrastra para moverte.</div>
+          <div id="mapMenu" class="actbox" hidden></div>
+        </div>
+        <div>
+          <b>Jugadores</b>
+          <div id="mapPlayers" class="listbox"></div>
+          <b style="display:block;margin-top:14px">⭐ Lugares guardados</b>
+          <div id="mapPlaces" class="listbox"></div>
+        </div>
+      </div>
+      <p class="note">Pulsa un jugador de la lista y luego un punto del mapa para llevarlo allí. El servidor no conoce los biomas ni lo explorado (eso se guarda en el juego de cada uno); para verlos usa «Mapa completo de la semilla» (semilla <b id="seedText">…</b>).</p>
+    </section>
+  </div>
+
+  <!-- OBJETOS -->
+  <div class="tab" id="tab-objetos" hidden>
+    <div class="grid">
+      <section>
+        <h2>🎒 Kits</h2>
+        <div class="row"><span class="muted">Dar a:</span><select id="kitWho"></select></div>
+        <div id="kitList" class="listbox"></div>
+        <div class="btns" style="margin-top:10px"><button class="small" id="kitNew">➕ Nuevo kit</button></div>
+        <div id="kitEditor" class="actbox" hidden>
+          <label>Nombre del kit</label><input id="kitName" style="width:100%">
+          <label>Objetos (uno por línea: <code>Objeto cantidad</code>, por ejemplo <code>Wood 50</code>)</label>
+          <textarea id="kitItems" rows="8"></textarea>
+          <div class="btns" style="margin-top:8px"><button class="on" id="kitSave">💾 Guardar</button><button id="kitCancel">Cancelar</button><button class="off" id="kitDelete">🗑 Borrar kit</button></div>
+        </div>
+      </section>
+      <section>
+        <h2>📦 Cofres cerca de un jugador</h2>
+        <div class="row"><select id="chestWho"></select><button class="info" id="chestFind">🔍 Buscar cofres (30 m)</button></div>
+        <div id="chestList" class="listbox"></div>
+        <div id="chestBox" class="actbox" hidden>
+          <b id="chestTitle"></b>
+          <div id="chestItems" class="listbox"></div>
+          <div class="row" style="margin-top:8px">
+            <input id="chestItem" placeholder="Añadir objeto…" list="itemList"><input id="chestCount" type="number" min="1" value="1" style="width:90px;flex:none">
+            <button class="on" id="chestAdd">Añadir</button>
+          </div>
+        </div>
+      </section>
+      <section class="wide">
+        <h2>📚 Buscar objetos</h2>
+        <input id="itemSearch" placeholder="Escribe para buscar: hierro, comida, flecha…" style="width:100%">
+        <div id="itemResults" class="listbox" style="max-height:340px;overflow:auto"></div>
+        <p class="note">Lista completa de nombres (en inglés): <a href="https://valheim-modding.github.io/Jotunn/data/objects/item-list.html" target="_blank" style="color:var(--blue)">item list ↗</a></p>
+      </section>
+    </div>
+  </div>
+
+  <!-- MUNDO -->
+  <div class="tab" id="tab-mundo" hidden>
+    <div class="grid">
+      <section>
+        <h2>👑 Progreso de jefes</h2>
+        <div id="bossList" class="listbox"></div>
+        <p class="note">Marcar un jefe como derrotado cambia el mundo como si lo hubierais matado (por ejemplo, qué enemigos aparecen en los asaltos). No da trofeos ni recompensas.</p>
+      </section>
+      <section>
+        <h2>🐺 Eventos e invasiones</h2>
+        <select id="eventSel" style="width:100%"></select>
+        <div class="row" style="margin-top:8px"><span class="muted">Junto a:</span><select id="eventWho"></select><button class="warn" id="eventStart">▶ Lanzar</button><button class="off" id="eventStop">⏹ Parar</button></div>
+        <p class="note" id="eventCurrent"></p>
+      </section>
+      <section>
+        <h2>🐗 Aparecer criaturas</h2>
+        <select id="spawnSel" style="width:100%"></select>
+        <div class="row" style="margin-top:8px">
+          <span class="muted">Junto a:</span><select id="spawnWho"></select>
+          <input id="spawnCount" type="number" min="1" max="20" value="1" style="width:80px;flex:none" title="Cantidad">
+          <select id="spawnLevel" title="Estrellas"><option value="1">Sin estrellas</option><option value="2">⭐</option><option value="3">⭐⭐</option></select>
+        </div>
+        <div class="checks"><label><input type="checkbox" id="spawnTamed"> Domesticado</label></div>
+        <div class="btns" style="margin-top:8px"><button class="warn" id="spawnGo">✨ Aparecer</button></div>
+        <p class="note">Aparece a unos 5 m del jugador. Cuidado con los jefes.</p>
+      </section>
+      <section>
+        <h2>🧹 Limpiar objetos tirados</h2>
+        <div class="row"><span class="muted">Alrededor de:</span><select id="dropWho"></select><select id="dropR"><option value="15">15 m</option><option value="30" selected>30 m</option><option value="60">60 m</option></select><button class="info" id="dropFind">🔍 Buscar</button></div>
+        <div id="dropList" class="listbox"></div>
+        <div class="btns" style="margin-top:8px" id="dropActions" hidden><button class="off" id="dropDelete">🗑 Borrar los marcados</button></div>
+        <p class="note">Solo busca objetos sueltos en el suelo (madera, piedras, botín…). Nunca borra construcciones, cofres ni lo que hay dentro.</p>
+      </section>
+    </div>
+  </div>
+
+  <!-- AVISOS -->
+  <div class="tab" id="tab-avisos" hidden>
+    <section>
+      <h2>👋 Mensaje de bienvenida</h2>
+      <input id="welcomeText" placeholder="Ej: ¡Bienvenido, {nombre}! La base está al norte." style="width:100%">
+      <p class="note">Sale en el centro de la pantalla de todos cuando alguien entra. <code>{nombre}</code> se cambia por el nombre del jugador. Vacío = sin bienvenida.</p>
+    </section>
+    <section>
+      <h2>⏰ Mensajes programados</h2>
+      <div id="schedList" class="listbox"></div>
+      <div class="btns" style="margin-top:8px"><button class="small" id="schedAdd">➕ Añadir mensaje</button></div>
+      <p class="note">Solo se envían si hay alguien conectado. Para un aviso ahora mismo, usa «Aviso para todos» en 👥 Jugadores. El reinicio con aviso está en 🏠 Inicio.</p>
+    </section>
+    <div class="btns" style="margin-bottom:16px"><button class="gold" id="msgSave">💾 Guardar avisos</button></div>
+  </div>
+
+  <!-- AJUSTES -->
+  <div class="tab" id="tab-ajustes" hidden>
+    <form id="settingsForm">
+      <div class="grid">
+        <section>
+          <h2>Servidor</h2>
+          <label>Nombre del servidor</label><input name="serverName" style="width:100%">
+          <label>Nombre del mundo (letras, números, - y _)</label><input name="worldName" style="width:100%">
+          <label>Contraseña del juego (mín. 5 caracteres, no puede estar dentro del nombre)</label>
+          <div class="row"><input name="password" type="password" id="passInput"><button type="button" class="small" id="showPass">👁</button></div>
+          <div class="checks" style="margin-top:12px">
+            <label><input type="checkbox" name="crossplay"> Crossplay (código de unión, Xbox/PC Game Pass)</label>
+            <label><input type="checkbox" name="public"> Aparecer en la lista pública de servidores</label>
+            <label><input type="checkbox" name="bepinex"> Mods (BepInEx) activados</label>
+          </div>
+          <p class="note">Cambiar el nombre del mundo crea un mundo nuevo (el anterior no se borra).</p>
+        </section>
+        <section>
+          <h2>Dificultad del mundo</h2>
+          <label>Preajuste</label>
+          <select name="preset"><option value="">(por defecto)</option></select>
+          <div id="modifiers"></div>
+          <label>Opciones extra</label>
+          <div class="checks" id="setkeys"></div>
+        </section>
+        <section>
+          <h2>Mantenimiento</h2>
+          <label>Copias de seguridad automáticas</label>
+          <select name="backupsCron">
+            <option value="0 * * * *">Cada hora</option>
+            <option value="0 */2 * * *">Cada 2 horas</option>
+            <option value="0 */6 * * *">Cada 6 horas</option>
+            <option value="0 4 * * *">Una vez al día (4:00)</option>
+          </select>
+          <label>Borrar copias con más de (días)</label><input name="backupsMaxAge" type="number" min="1" max="60" style="width:100px">
+          <label>Reinicio automático diario</label>
+          <select name="restartCron">
+            <option value="">Nunca</option>
+            <option value="0 5 * * *">Todos los días a las 5:00</option>
+            <option value="0 6 * * 1">Los lunes a las 6:00</option>
+          </select>
+          <div class="checks" style="margin-top:12px"><label><input type="checkbox" name="updateIfIdle"> Actualizar Valheim automáticamente cuando no haya nadie</label></div>
+          <label style="margin-top:14px">Del panel (se guarda al momento, sin reiniciar)</label>
+          <div class="checks"><label><input type="checkbox" id="autoRecover"> Reiniciar solo si el crossplay se queda sin conexión y no hay nadie conectado (máx. una vez por hora)</label></div>
+        </section>
+      </div>
+      <section style="margin-top:16px">
+        <div class="btns">
+          <button type="submit" class="gold">💾 Guardar y aplicar (reinicia el servidor)</button>
+          <button type="button" id="saveOnly">Solo guardar</button>
+        </div>
+        <p class="note">Al aplicar se recrea el servidor con los ajustes nuevos; los jugadores conectados se desconectan un momento.</p>
+      </section>
+    </form>
+  </div>
+
+  <!-- MODS Y COPIAS -->
+  <div class="tab" id="tab-mods" hidden>
+    <section>
+      <h2>Mundo, copias y disco</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Último guardado</div><div class="v" id="oSaved">—</div><div class="muted" style="font-size:12px" id="oSavedSub"></div></div>
+        <div class="kpi"><div class="l">Tamaño del mundo</div><div class="v" id="oWorld">—</div><div class="muted" style="font-size:12px" id="oWorldSub"></div></div>
+        <div class="kpi"><div class="l">Última copia</div><div class="v" id="oBackup">—</div><div class="muted" style="font-size:12px" id="oBackupSub"></div></div>
+        <div class="kpi"><div class="l">Copias guardadas</div><div class="v" id="oBackups">—</div></div>
+        <div class="kpi"><div class="l">Disco libre</div><div class="v" id="oDisk">—</div><div class="bar"><i id="bDisk"></i></div></div>
+      </div>
+      <p class="note">Valheim guarda el mundo solo cada 30 minutos. Las copias de seguridad copian ese último guardado.</p>
+    </section>
+    <section>
+      <h2>💾 Copias de seguridad del mundo</h2>
+      <div class="btns"><button class="info" id="backupNow">💾 Hacer copia ahora</button></div>
+      <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Archivo</th><th>Fecha</th><th>Tamaño</th><th>Acciones</th></tr></thead><tbody id="backupList"></tbody></table></div>
+      <p class="note">Restaurar para el servidor, guarda el mundo actual como «worlds_local.antes-de-restaurar-…» (por si acaso) y arranca con la copia elegida. Las copias están en Valheim/data/config/backups.</p>
+    </section>
+    <section>
+      <h2>🧩 Mods instalados</h2>
+      <div id="modsInstalled"><div class="muted">Cargando…</div></div>
+      <div class="row" style="margin-top:12px">
+        <label class="btns" style="margin:0"><input type="file" id="modFile" accept=".dll,.zip" hidden><button type="button" class="info" id="modUploadBtn">⬆ Subir mod (.dll o .zip)</button></label>
+      </div>
+      <p class="note">Los cambios en mods se aplican al reiniciar. ⚠️ La mayoría de mods también deben instalarlos tus amigos en su juego (con r2modman / Thunderstore Mod Manager); los marcados como «Server-side» solo hacen falta en el servidor.</p>
+    </section>
+    <section>
+      <h2>Buscar mods en Thunderstore</h2>
+      <div class="row">
+        <input id="tsQuery" placeholder="Ej: plant everything, craft from containers, valheim plus…">
+        <select id="tsCat"><option value="">Todas las categorías</option></select>
+        <button class="info" id="tsSearch">🔍 Buscar</button>
+      </div>
+      <p class="note" id="tsInfo"></p>
+      <div id="tsResults"></div>
+    </section>
+    <section>
+      <h2>Configuración de mods (.cfg)</h2>
+      <div class="row"><select id="cfgSelect"><option value="">— elige un archivo —</option></select><button id="cfgSave" class="on" disabled>Guardar</button></div>
+      <textarea id="cfgText" rows="18" style="margin-top:10px" placeholder="Los archivos .cfg aparecen después de arrancar el servidor con el mod instalado."></textarea>
+    </section>
+  </div>
+
+  <!-- CONSOLA -->
+  <div class="tab" id="tab-consola" hidden>
+    <section>
+      <h2>Consola del servidor</h2>
+      <p class="muted" style="margin-top:0" id="rconState"></p>
+      <div class="qgroups">
+        <div><span class="muted">Info</span>
+          <button class="small info" data-quick="players">👥 Jugadores</button>
+          <button class="small info" data-quick="serverStats">📊 Estadísticas</button>
+          <button class="small info" data-quick="time">🕐 Día y hora</button>
+          <button class="small" data-quick="adminlist">⭐ Admins</button>
+          <button class="small" data-quick="banlist">⛔ Baneados</button></div>
+        <div><span class="muted">Mundo</span>
+          <button class="small info" data-quick="save">💾 Guardar mundo</button>
+          <button class="small" data-quick="globalKeys">🔑 Jefes y llaves</button>
+          <button class="small" data-quick="eventsList">🐺 Lista de eventos</button>
+          <button class="small" data-quick="currentEvent">Evento actual</button>
+          <button class="small warn" data-quick="stopEvent">Parar evento</button></div>
+        <div><span class="muted">Mensajes</span>
+          <button class="small" data-quick="say ">💬 Chat: say …</button>
+          <button class="small" data-quick="showMessage ">📢 Aviso en pantalla …</button></div>
+      </div>
+      <div class="row">
+        <input id="conInput" placeholder="Escribe un comando y pulsa Enter (ej: say Hola vikingos)" autocomplete="off">
+        <button class="gold" id="conSend">Enviar</button>
+      </div>
+      <div id="conOut" style="margin-top:10px;background:#0c0d10;border:1px solid var(--line);border-radius:10px;height:40vh;overflow:auto;padding:10px 12px;font:12.5px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap"></div>
+      <p class="note">Flechas ↑ ↓ para repetir comandos anteriores. Los que llevan «…» rellenan el cuadro para que completes el texto. Todos los comandos: <a href="https://github.com/Tristan-dvr/ValheimRcon/blob/master/commands.md" target="_blank" style="color:var(--blue)">lista completa ↗</a>. Los comandos de jugador usan el SteamID (está en cada tarjeta de 👥 Jugadores).</p>
+    </section>
+
+    <section>
+      <h2>Comandos dentro del juego</h2>
+      <p class="muted" style="margin-top:0">Valheim no permite cambiar la hora o el clima desde fuera del juego. Si eres admin (añádete en 👥 Jugadores), pulsa <b>F5</b> en el juego para abrir la consola:</p>
+      <div class="tablewrap"><table>
+        <tr><td><code>kick Nombre</code></td><td>Expulsar a un jugador</td></tr>
+        <tr><td><code>ban Nombre</code> / <code>unban Nombre</code></td><td>Banear / desbanear</td></tr>
+        <tr><td><code>save</code></td><td>Guardar el mundo ahora</td></tr>
+        <tr><td><code>sleep</code></td><td>Pasar la noche</td></tr>
+        <tr><td><code>devcommands</code></td><td>Activa comandos de trucos (luego: <code>tod 0.5</code> mediodía, <code>env Clear</code> despejado, <code>god</code>, <code>fly</code>, <code>spawn Objeto</code>…). Solo funcionan en tu propio juego si eres el anfitrión, no en un servidor dedicado.</td></tr>
+      </table></div>
+    </section>
+
+    <section>
+      <details id="logDetails">
+        <summary><b>📜 Registro del servidor</b> <span class="muted">(pulsa para abrir)</span></summary>
+        <div class="row" style="margin:10px 0">
+          <input id="logFilter" placeholder="Filtrar (ej: error, join code, ZDOID…)">
+          <label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="logAuto" checked> Seguir al final</label>
+          <label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="logNoise" checked> Ocultar ruido</label>
+        </div>
+        <div id="logbox"></div>
+      </details>
+    </section>
+  </div>
+</div>
+
+<div id="toast" hidden></div>
+
+<script>
+I18N.start(); // traduce la página si el idioma elegido es inglés (ver i18n.js)
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+const toast = $("#toast");
+// Aviso abajo: se oculta solo a los pocos segundos (los errores duran más); pulsarlo lo cierra
+let toastTimer = null;
+function say(msg, kind) {
+  toast.className = kind || ""; toast.textContent = msg; toast.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => (toast.hidden = true), kind === "err" ? 12000 : 5000);
+}
+toast.addEventListener("click", () => (toast.hidden = true));
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function fmtBytes(b) { if (!b) return "0 B"; const u = ["B", "KB", "MB", "GB"]; const i = Math.min(3, Math.floor(Math.log(b) / Math.log(1024))); return (b / 1024 ** i).toFixed(i ? 1 : 0) + " " + u[i]; }
+function fmtDur(ms) { const s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; }
+function fmtDate(d) { return new Date(d).toLocaleString(LOCALE, { dateStyle: "short", timeStyle: "short" }); }
+
+async function api(path, body, method) {
+  const opts = body === undefined ? { method: method || "GET" } : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+  const r = await fetch(path, opts);
+  const data = await r.json().catch(() => ({}));
+  if (r.status === 401) { location.reload(); throw new Error("Sesión caducada"); }
+  if (!r.ok) throw new Error(data.error || "Error " + r.status);
+  return data;
+}
+
+// Botones peligrosos: primer clic arma, segundo confirma
+function confirmClick(btn) {
+  if (btn.dataset.armed === "1") { btn.dataset.armed = ""; btn.textContent = btn.dataset.label; return true; }
+  btn.dataset.label = btn.textContent; btn.dataset.armed = "1"; btn.textContent = "¿Seguro? Pulsa otra vez";
+  setTimeout(() => { if (btn.dataset.armed) { btn.dataset.armed = ""; btn.textContent = btn.dataset.label; } }, 3500);
+  return false;
+}
+
+// Solo cambia el HTML si es distinto: así no se cierran menús ni se desarman botones de «¿Seguro?»
+function setHTML(el, html) { if (el && el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } }
+
+// ---------- pestañas ----------
+// Pestañas que ya no existen (por si el navegador recuerda una antigua)
+const TAB_ALIAS = { listas: "jugadores", registro: "consola", copias: "mods" };
+function openTab(name) { $(`#tabs button[data-tab="${TAB_ALIAS[name] || name}"]`)?.click(); }
+$$("#tabs button").forEach((b) => b.addEventListener("click", () => {
+  $$("#tabs button").forEach((x) => x.classList.toggle("active", x === b));
+  $$(".tab").forEach((t) => (t.hidden = t.id !== "tab-" + b.dataset.tab));
+  const loaders = {
+    jugadores: () => { loadLists().then(() => lastPlayers && renderPlayers(lastPlayers)); },
+    ajustes: loadSettings, mods: () => { loadMods(); loadBackups(); loadOverview(); },
+    consola: () => { $("#conInput").focus(); if ($("#logDetails").open) renderLogs(); },
+  };
+  Object.assign(loaders, window.EXTRA_LOADERS || {});
+  loaders[b.dataset.tab] && loaders[b.dataset.tab]();
+  try { localStorage.setItem("vhTab", b.dataset.tab); } catch {}
+}));
+
+// ---------- inicio ----------
+let lastStatus = null, lastPlayers = null;
+// Datos en directo: el servidor los manda cada vez que cambian (/api/live). Si eso falla, se pregunta cada 3 s.
+let pollTimer = null;
+function onLive(d) {
+  if (d.status) renderStatus(d.status);
+  if (d.players) {
+    lastPlayers = d.players;
+    if (!$("#tab-jugadores").hidden) renderPlayers(d.players);
+    window.onPlayersLoaded && window.onPlayersLoaded(d.players);
+  }
+}
+function startLive() {
+  if (!window.EventSource) return startPolling();
+  const es = new EventSource("/api/live");
+  es.onmessage = (e) => { try { onLive(JSON.parse(e.data)); } catch {} };
+  es.onopen = () => { clearInterval(pollTimer); pollTimer = null; };
+  es.onerror = () => {
+    // El navegador reintenta solo; mientras tanto (o si cierra del todo) se pregunta a la antigua
+    startPolling();
+    if (es.readyState === EventSource.CLOSED) setTimeout(startLive, 5000);
+  };
+}
+function startPolling() {
+  if (pollTimer) return;
+  const tick = async () => {
+    try { const [status, players] = await Promise.all([api("/api/status"), api("/api/players")]); onLive({ status, players }); }
+    catch { $("#hdrDot").className = "dot bad"; $("#hdrText").textContent = "Panel sin conexión"; }
+  };
+  tick(); pollTimer = setInterval(tick, 3000);
+}
+async function loadStatus() { try { renderStatus(await api("/api/status")); } catch {} }
+async function loadPlayers() { lastPlayers = await api("/api/players"); renderPlayers(lastPlayers); }
+function renderStatus(s) {
+  try {
+    lastStatus = s;
+    const phases = { "en línea": ["ok", "🟢 En línea"], "arrancando": ["wait", "🟡 Arrancando…"], "actualizando": ["wait", "🟡 Descargando/actualizando…"],
+                     "parando": ["wait", "🟠 Parando…"], "parado": ["bad", "🔴 Parado"], "no creado": ["bad", "🔴 No creado"] };
+    const [cls, txt] = phases[s.phase] || ["wait", s.phase];
+    $("#hdrDot").className = "dot " + cls;
+    $("#hdrText").textContent = txt.replace(/^\S+ /, "") + (s.running && s.phase === "en línea" ? ` · ${s.playerCount ?? 0} jugadores` : "");
+    $("#kState").textContent = txt;
+    $("#kPlayers").textContent = s.running ? (s.playerCount ?? "—") : "—";
+    $("#kUptime").textContent = s.onlineSince ? fmtDur(Date.now() - s.onlineSince) : s.startedAt ? fmtDur(Date.now() - new Date(s.startedAt)) : "—";
+    $("#restartBanner").hidden = !(s.running && s.modsPending);
+    const h = s.crossplayHealth || {};
+    $("#crossplayBanner").hidden = !(s.running && s.crossplay && h.broken);
+    $("#pfErrors").textContent = h.errors || 0;
+    $("#pfAuto").textContent = h.autoRecover ? "Se reiniciará solo en cuanto no haya nadie conectado." : "";
+    if (document.activeElement !== $("#autoRecover")) $("#autoRecover").checked = !!h.autoRecover;
+    if (document.activeElement !== $("#allImmortal")) $("#allImmortal").checked = (s.immortal || []).includes("*");
+    $("#kVersion").textContent = s.version || "—";
+    $("#kWorld").textContent = s.serverName ? `Servidor «${s.serverName}» · mundo «${s.worldName}»` : "";
+    if (s.stats) {
+      const cpuPct = s.stats.cpu / s.stats.cpus;
+      $("#kCpu").textContent = cpuPct.toFixed(0) + "%";
+      $("#bCpu").style.width = Math.min(100, cpuPct) + "%";
+      $("#kMem").textContent = fmtBytes(s.stats.memUsed);
+      $("#bMem").style.width = s.stats.memLimit ? Math.min(100, s.stats.memUsed / s.stats.memLimit * 100) + "%" : "0";
+    } else { $("#kCpu").textContent = $("#kMem").textContent = "—"; $("#bCpu").style.width = $("#bMem").style.width = "0"; }
+    // Con crossplay, unirse por IP solo funciona con la IP pública con la que se registró la sesión
+    $("#addrLocalLabel").textContent = s.crossplay ? "🌐 Por IP («Unirse por IP»)" : "🏠 En casa (misma Wi-Fi)";
+    $("#crossplayIpNote").hidden = !s.crossplay;
+    if (s.crossplay) setAddr("addrLocal", s.publicIp ? s.publicIp + ":2456" : "", "Esperando a que el servidor arranque…");
+    else setAddr("addrLocal", s.addresses.local, "Sin configurar");
+    setAddr("addrPublic", s.addresses.public, "Pendiente: crea el túnel en playit.gg");
+    const lanHost = (s.addresses.local || "").split(":")[0];
+    $("#panelUrl").textContent = lanHost ? `http://${lanHost}:${location.port || 80}` : location.origin;
+    $$("[data-rconbtn], [data-rcon]").forEach((b) => { b.disabled = !s.rcon; b.title = s.rcon ? "" : "Necesita el servidor en línea con el mod RCON"; });
+    $("#rconState").textContent = s.rcon ? "🟢 Conectado al servidor por RCON." : "🔴 RCON no disponible: el servidor está arrancando o el mod RCON no está cargado.";
+    setAddr("addrCode", s.crossplay ? s.joinCode : "", !s.crossplay ? "Crossplay desactivado" : s.running ? "Esperando a que el servidor arranque…" : "El servidor está parado");
+    if (s.events) renderEvents(s.events);
+    updateFriendMsg();
+    window.onStatus && window.onStatus(s);
+  } catch (e) { console.error(e); }
+}
+const EVENT_ICONS = { save: "💾", backup: "🗄", join: "🟢", leave: "⚪", start: "🚀", stop: "⏹", code: "🔑", rejected: "🚫", death: "💀" };
+let overviewAt = 0;
+function renderEvents(events) {
+  // Al guardarse el mundo o hacerse una copia, refrescar «Último guardado» y las copias
+  const disk = events.find((e) => e.kind === "save" || e.kind === "backup");
+  if (disk && disk.t > overviewAt) { overviewAt = Date.now(); setTimeout(loadOverview, 1500); }
+  if (lastOverview && lastOverview.db) $("#kSaved").textContent = "hace " + ago(lastOverview.db.savedAt);
+  setHTML($("#events"), events.length ? events.map((e) =>
+    `<div class="item" style="font-family:system-ui"><span>${EVENT_ICONS[e.kind] || "•"} ${esc(e.text)}</span><span class="muted">${new Date(e.t).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" })}</span></div>`).join("")
+    : `<div class="muted">Sin actividad desde el último arranque.</div>`);
+}
+function setAddr(id, value, pending) {
+  const c = $("#" + id);
+  c.textContent = value || pending;
+  c.classList.toggle("pending", !value);
+}
+$$("[data-copy]").forEach((b) => b.addEventListener("click", () => {
+  const c = $("#" + b.dataset.copy);
+  if (c.classList.contains("pending")) return;
+  navigator.clipboard.writeText(c.textContent).then(() => { b.textContent = "¡Copiado!"; setTimeout(() => (b.textContent = "Copiar"), 1500); });
+}));
+$$("[data-server]").forEach((b) => b.addEventListener("click", async () => {
+  if (b.hasAttribute("data-confirm") && !confirmClick(b)) return;
+  const names = { start: "Iniciando", stop: "Parando (guardando el mundo)", restart: "Reiniciando (guardando el mundo)" };
+  say(names[b.dataset.server] + "…");
+  b.disabled = true;
+  try { await api("/api/server", { action: b.dataset.server }); say("Hecho: " + names[b.dataset.server].toLowerCase(), "ok"); if (b.dataset.server !== "stop") $("#restartBanner").hidden = true; }
+  catch (e) { say(e.message, "err"); }
+  b.disabled = false; loadStatus();
+}));
+$("#quickBackup").addEventListener("click", () => backupNow());
+$("#logoutBtn").addEventListener("click", async () => { await fetch("/api/logout", { method: "POST" }); location.reload(); });
+function immortalOn(id) { const l = (lastStatus && lastStatus.immortal) || []; return l.includes("*") || l.includes(id); }
+async function setImmortal(id, enabled) {
+  try {
+    const r = await api("/api/immortal", { id, enabled });
+    if (lastStatus) lastStatus.immortal = r.immortal;
+    say(enabled ? "Modo inmortal activado." : "Modo inmortal desactivado.", "ok");
+    if (lastPlayers && !$("#tab-jugadores").hidden) renderPlayers(lastPlayers);
+  } catch (err) { say(err.message, "err"); }
+}
+$("#allImmortal").addEventListener("change", (e) => setImmortal("*", e.target.checked));
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-immortal]");
+  if (b) setImmortal(b.dataset.immortal, b.dataset.enable === "true");
+});
+$("#autoRecover").addEventListener("change", async (e) => {
+  try { await api("/api/autorecover", { enabled: e.target.checked }); say(e.target.checked ? "Reinicio automático activado." : "Reinicio automático desactivado.", "ok"); loadStatus(); }
+  catch (err) { say(err.message, "err"); }
+});
+
+function ago(d) { return fmtDur(Date.now() - new Date(d)); }
+let friendEdited = false, lastOverview = null;
+$("#friendMsg").addEventListener("input", () => (friendEdited = true));
+function updateFriendMsg() {
+  const o = lastOverview, s = lastStatus;
+  if (friendEdited || !o || !s) return;
+  // El textarea no lo traduce i18n.js (es texto editable): se compone ya en el idioma elegido
+  const lines = ["⚔️ " + t("Servidor de Valheim: {a}", { a: s.serverName }), ""];
+  if (s.crossplay && s.joinCode) lines.push("🔑 " + t("Código: {a}  (Unirse a partida → Añadir servidor)", { a: s.joinCode }));
+  if (s.addresses.public) lines.push("🌍 " + t("IP: {a}", { a: s.addresses.public }));
+  lines.push("🔒 " + t("Contraseña: {a}", { a: o.password }));
+  if (o.mods.length) { lines.push("", "🧩 " + t("Mods necesarios (instálalos con r2modman):")); o.mods.forEach((m) => lines.push(`- ${m.name} ${m.version}${m.url ? " " + m.url : ""}`)); }
+  if ($("#friendMsg").value !== lines.join("\n")) $("#friendMsg").value = lines.join("\n");
+}
+async function loadOverview() {
+  try {
+    const o = await api("/api/overview");
+    lastOverview = o; overviewAt = Date.now();
+    $("#oSaved").textContent = o.db ? "hace " + ago(o.db.savedAt) : "Aún no";
+    $("#oSavedSub").textContent = o.db ? fmtDate(o.db.savedAt) : "Se guarda a los 30 min de arrancar";
+    $("#oWorld").textContent = o.worldsSize ? fmtBytes(o.worldsSize) : "—";
+    $("#oWorldSub").textContent = o.autoBackupsSize ? "+ " + fmtBytes(o.autoBackupsSize) + " en copias internas de Valheim" : "";
+    $("#oBackup").textContent = o.lastBackup ? "hace " + ago(o.lastBackup.date) : "Ninguna";
+    $("#oBackupSub").textContent = o.lastBackup ? o.lastBackup.file : "";
+    $("#oBackups").textContent = o.backupsCount + (o.backupsCount ? " · " + fmtBytes(o.backupsSize) : "");
+    if (o.disk) {
+      const usedPct = 100 - o.disk.free / o.disk.total * 100;
+      $("#oDisk").textContent = fmtBytes(o.disk.free);
+      $("#bDisk").style.width = usedPct + "%";
+      $("#bDisk").style.background = usedPct > 90 ? "var(--red)" : usedPct > 80 ? "var(--amber)" : "var(--gold)";
+    }
+    $("#kSaved").textContent = o.db ? "hace " + ago(o.db.savedAt) : "Aún no";
+    updateFriendMsg();
+  } catch {}
+}
+$("#copyFriend").addEventListener("click", () => navigator.clipboard.writeText($("#friendMsg").value).then(() => say("Mensaje copiado.", "ok")));
+
+// ---------- jugadores ----------
+let listsCache = { admin: [], banned: [], permitted: [] }, cardsKey = "";
+const inList = (type, id) => (listsCache[type] || []).some((x) => x === id || x === id.replace(/^Steam_/, ""));
+// Botones de admin / permitido / baneado (listas del servidor)
+function listButtons(pl) {
+  const isAdmin = inList("admin", pl.id), isBanned = inList("banned", pl.id), isPermitted = inList("permitted", pl.id);
+  return `<button class="small ${isAdmin ? "" : "info"}" data-act="admin" data-add="${!isAdmin}" data-id="${esc(pl.id)}">${isAdmin ? "Quitar admin" : "⭐ Hacer admin"}</button>
+    <button class="small ${isPermitted ? "" : "on"}" data-act="permitted" data-add="${!isPermitted}" data-id="${esc(pl.id)}">${isPermitted ? "Quitar de permitidos" : "✅ Permitir"}</button>
+    <button class="small ${isBanned ? "on" : "off"}" data-act="banned" data-add="${!isBanned}" data-id="${esc(pl.id)}" ${isBanned ? "" : "data-confirm"}>${isBanned ? "Desbanear" : "⛔ Banear"}</button>`;
+}
+const playerTags = (pl) => (inList("admin", pl.id) ? '<span class="tag gold">admin</span>' : "") + (inList("banned", pl.id) ? '<span class="tag off">baneado</span>' : "")
+  + (immortalOn(pl.id) ? '<span class="tag ok">🛡️ inmortal</span>' : "");
+// Tarjeta de un jugador conectado. Lo que cambia a menudo (vida, tiempo, posición) va en [data-f] y se
+// actualiza sin volver a pintar la tarjeta, para no cerrar los menús abiertos.
+function playerCard(pl) {
+  const dis = lastStatus && lastStatus.rcon ? "" : "disabled";
+  const who = esc(pl.name || pl.id.replace(/^Steam_/, "")), id = esc(pl.id), imm = immortalOn(pl.id);
+  return `<div class="pcard" data-pid="${id}">
+    <div class="phead">
+      <div><b style="font-size:17px">${esc(pl.name || "(entrando…)")}</b> ${playerTags(pl)}<div class="muted" style="font-size:12px">${id}</div></div>
+      <div class="muted" style="font-size:13px;text-align:right">⏱ <span data-f="time"></span><br>📍 <span data-f="pos"></span></div>
+    </div>
+    <div class="hprow"><div class="bar"><i data-f="hpbar"></i></div><span data-f="hp" class="muted" style="font-size:13px"></span></div>
+    <div class="btns">
+      <button class="info" data-tpmenu="${id}" ${dis}>📍 Teletransportar</button>
+      <button data-rcon="give" data-who="${who}" data-id="${id}" ${dis}>🎁 Dar objeto</button>
+      <button data-kitmenu="${id}" ${dis}>🎒 Kit</button>
+      <button class="${imm ? "on" : ""}" data-immortal="${id}" data-enable="${!imm}" ${dis}>${imm ? "🛡️ Inmortal ✓" : "🛡️ Inmortal"}</button>
+      <button data-heal="${id}" ${dis}>❤️ Curar</button>
+    </div>
+    <details class="modbox"><summary>Moderación ▾</summary><div class="btns" style="margin-top:8px">
+      <button class="small warn" data-rcon="kick" data-who="${who}" data-confirm ${dis}>👢 Expulsar</button>
+      <button class="small off" data-rcon="ban" data-who="${who}" data-id="${id}" data-confirm ${dis}>⛔ Banear ya</button>
+      ${listButtons(pl)}</div></details>
+    <div class="pslot"></div>
+  </div>`;
+}
+function updateCard(card, pl) {
+  const f = (k) => card.querySelector(`[data-f="${k}"]`);
+  f("time").textContent = pl.sessionStart ? fmtDur(Date.now() - pl.sessionStart) : "—";
+  f("pos").textContent = pl.pos ? `${(Math.hypot(pl.pos.x, pl.pos.z) / 1000).toFixed(1)} km del centro` : "—";
+  f("pos").title = pl.pos ? `x ${Math.round(pl.pos.x)} · z ${Math.round(pl.pos.z)} · altura ${Math.round(pl.pos.y)}` : "";
+  const pct = pl.maxHp ? Math.max(0, Math.min(100, pl.hp / pl.maxHp * 100)) : 0;
+  f("hpbar").style.width = pct + "%";
+  f("hpbar").style.background = pct < 30 ? "var(--red)" : "var(--green)";
+  f("hp").textContent = pl.maxHp ? `❤️ ${Math.round(pl.hp)} / ${Math.round(pl.maxHp)}` : "❤️ —";
+}
+// Las cajas de acciones (#actBox, #giveBox) se mueven dentro de la tarjeta; antes de repintar se guardan fuera
+function parkBoxes() { const h = $("#boxPark"); ["#actBox", "#giveBox"].forEach((s) => { const b = $(s); if (b.parentElement !== h) { b.hidden = true; h.appendChild(b); } }); }
+function renderPlayers(p) {
+  $("#pCount").textContent = `(${p.count ?? p.online.length})`;
+  const key = JSON.stringify([p.online.map((x) => [x.id, x.name]), listsCache, lastStatus && lastStatus.immortal, lastStatus && lastStatus.rcon]);
+  if (key !== cardsKey) {
+    cardsKey = key; parkBoxes();
+    $("#pOnline").innerHTML = p.online.length ? p.online.map(playerCard).join("") : `<div class="muted">No hay nadie conectado.</div>`;
+  }
+  for (const pl of p.online) { const c = $(`.pcard[data-pid="${CSS.escape(pl.id)}"]`); if (c) updateCard(c, pl); }
+  const tags = playerTags, lists = listsCache;
+  const actions = (pl) => `<div class="btns">${listButtons(pl)}</div>`;
+  // Rechazados en las últimas 24 h
+  const rejected = p.history.filter((pl) => pl.rejectedAt && Date.now() - pl.rejectedAt < 86400000 && !pl.online);
+  $("#rejectedSection").hidden = !rejected.length;
+  const reason = (pl) => pl.rejectReason === "password" ? "Contraseña incorrecta"
+    : inList("banned", pl.id) ? "Está baneado"
+    : lists.permitted.length && !inList("permitted", pl.id) ? "No está en la lista de permitidos" : "Desconocido (¿versión o mods distintos?)";
+  setHTML($("#pRejected"), rejected.map((pl) => `<tr><td><b>${esc(pl.name || "(sin nombre)")}</b><div class="muted">${esc(pl.id)}</div></td><td>${fmtDate(pl.rejectedAt)}</td><td>${reason(pl)}</td><td><div class="btns">
+      ${inList("banned", pl.id) ? `<button class="small on" data-act="banned" data-add="false" data-id="${esc(pl.id)}">Desbanear</button>` : ""}
+      ${lists.permitted.length && !inList("permitted", pl.id) ? `<button class="small on" data-act="permitted" data-add="true" data-id="${esc(pl.id)}">✅ Permitir</button>` : ""}
+    </div></td></tr>`).join(""));
+  setHTML($("#pHistory"), p.history.length ? p.history.map((pl) =>
+    `<tr><td><b>${esc(pl.name || "(sin nombre)")}</b> ${tags(pl)} ${pl.online ? '<span class="tag ok">en línea</span>' : ""}<div class="muted" style="font-size:12px">${esc(pl.id)}</div></td><td>${pl.playMs ? fmtDur(pl.playMs) : "—"}</td><td>${pl.sessions || "—"}</td><td>${pl.deaths ? "💀 " + pl.deaths : "0"}</td><td>${fmtDate(pl.lastSeen)}</td><td>${actions(pl)}</td></tr>`).join("")
+    : `<tr><td colspan="6" class="muted">Todavía no ha entrado nadie.</td></tr>`);
+}
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-act]");
+  if (!b) return;
+  if (b.hasAttribute("data-confirm") && !confirmClick(b)) return;
+  try {
+    await api("/api/lists", { type: b.dataset.act, id: b.dataset.id, add: b.dataset.add === "true" });
+    say("Lista actualizada. Se aplica al reiniciar el servidor (o en el próximo intento de entrar).", "ok");
+    await loadLists(); if (lastPlayers) renderPlayers(lastPlayers);
+  } catch (err) { say(err.message, "err"); }
+});
+
+// Botones en vivo por RCON
+async function rconCmd(cmd) {
+  const r = await api("/api/rcon", { cmd });
+  return r.out;
+}
+let giveTarget = null;
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-rcon]");
+  if (!b || b.disabled) return;
+  const who = b.dataset.who, kind = b.dataset.rcon;
+  if (kind === "give") {
+    giveTarget = b.dataset.id.replace(/^Steam_/, "");
+    $("#actBox").hidden = true;
+    const slot = b.closest(".pcard")?.querySelector(".pslot");
+    if (slot) slot.appendChild($("#giveBox"));
+    $("#giveName").textContent = who; $("#giveBox").hidden = false; $("#giveItem").focus();
+    return;
+  }
+  if (b.hasAttribute("data-confirm") && !confirmClick(b)) return;
+  try {
+    if (kind === "kick") { say("Expulsado: " + (await rconCmd(`kick "${who}"`)), "ok"); }
+    if (kind === "ban") {
+      const out = await rconCmd(`ban "${who}"`);
+      // Por si el mod lo guarda con otro formato de ID, también lo apuntamos en la lista
+      await api("/api/lists", { type: "banned", id: b.dataset.id, add: true });
+      await rconCmd(`kick "${who}"`).catch(() => {});
+      say("Baneado: " + out, "ok");
+      await loadLists(); if (lastPlayers) renderPlayers(lastPlayers);
+    }
+  } catch (err) { say(err.message, "err"); }
+});
+$("#giveCancel").addEventListener("click", () => ($("#giveBox").hidden = true));
+$("#giveSend").addEventListener("click", async () => {
+  const item = $("#giveItem").value.trim();
+  if (!/^[\w]+$/.test(item)) return say("Elige un objeto de la lista (al escribir aparecen sugerencias).", "err");
+  try {
+    const out = await rconCmd(`give ${giveTarget} ${item} -count ${Math.max(1, +$("#giveCount").value || 1)} -quality ${Math.min(4, Math.max(1, +$("#giveQuality").value || 1))}`);
+    say(out, "ok"); $("#giveBox").hidden = true;
+  } catch (err) { say(err.message, "err"); }
+});
+$$("[data-rconbtn]").forEach((b) => b.addEventListener("click", async () => {
+  try { say(await rconCmd(b.dataset.rconbtn) || "Hecho", "ok"); setTimeout(loadOverview, 3000); } catch (e) { say(e.message, "err"); }
+}));
+
+// ---------- consola ----------
+const conHist = []; let conPos = 0;
+function conPrint(text, cls) {
+  const box = $("#conOut"), d = document.createElement("div");
+  d.textContent = text; if (cls) d.style.color = cls;
+  box.appendChild(d); box.scrollTop = box.scrollHeight;
+}
+async function conRun(cmd) {
+  cmd = cmd.trim(); if (!cmd) return;
+  conHist.push(cmd); conPos = conHist.length;
+  conPrint("> " + cmd, "var(--gold)");
+  try { conPrint((await rconCmd(cmd)) || "(sin respuesta)"); } catch (e) { conPrint(e.message, "#ff8a80"); }
+}
+$("#conSend").addEventListener("click", () => { conRun($("#conInput").value); $("#conInput").value = ""; });
+$("#conInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { conRun(e.target.value); e.target.value = ""; }
+  if (e.key === "ArrowUp" && conPos > 0) { e.target.value = conHist[--conPos]; e.preventDefault(); }
+  if (e.key === "ArrowDown") { conPos = Math.min(conHist.length, conPos + 1); e.target.value = conHist[conPos] || ""; e.preventDefault(); }
+});
+$$("[data-quick]").forEach((b) => b.addEventListener("click", () => {
+  const c = b.dataset.quick;
+  if (c.endsWith(" ")) { $("#conInput").value = c; $("#conInput").focus(); } else conRun(c);
+}));
+
+// ---------- listas ----------
+async function loadLists() {
+  const lists = await api("/api/lists");
+  listsCache = lists;
+  const names = Object.fromEntries(((lastPlayers || await api("/api/players")).history).map((p) => [p.id.replace(/^Steam_/, ""), p.name]));
+  for (const type of ["admin", "banned", "permitted"]) {
+    // Mostramos cada jugador una vez aunque esté guardado como "7656…" y "Steam_7656…"
+    const shown = [...new Set(lists[type].map((id) => id.replace(/^Steam_(\d{17})$/, "$1")))];
+    $("#list-" + type).innerHTML = shown.length ? shown.map((id) =>
+      `<div class="item"><span>${esc(id)} ${names[id] ? `<b style="font-family:system-ui">(${esc(names[id])})</b>` : ""}</span><button class="small" data-listdel="${type}" data-id="${esc(id)}">Quitar</button></div>`).join("")
+      : `<div class="muted">Vacía</div>`;
+  }
+}
+$$("[data-listadd]").forEach((b) => b.addEventListener("click", async () => {
+  const type = b.dataset.listadd, input = $("#in-" + type), id = input.value.trim();
+  if (!/^[\w-]{3,64}$/.test(id)) return say("ID no válido. Usa el SteamID de 17 cifras.", "err");
+  try { await api("/api/lists", { type, id, add: true }); input.value = ""; say("Añadido. Se aplica al reiniciar el servidor.", "ok"); loadLists(); } catch (e) { say(e.message, "err"); }
+}));
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-listdel]");
+  if (!b) return;
+  try { await api("/api/lists", { type: b.dataset.listdel, id: b.dataset.id, add: false }); loadLists(); say("Quitado de la lista.", "ok"); } catch (err) { say(err.message, "err"); }
+});
+
+// ---------- ajustes ----------
+const T = {
+  presets: { normal: "Normal", casual: "Casual", easy: "Fácil", hard: "Difícil", hardcore: "Hardcore", immersive: "Inmersivo", hammer: "Solo construir (Hammer)" },
+  mods: { combat: "Combate", deathpenalty: "Castigo al morir", resources: "Recursos", raids: "Asaltos", portals: "Portales" },
+  vals: { veryeasy: "Muy fácil", easy: "Fácil", hard: "Difícil", veryhard: "Muy difícil", casual: "Casual", hardcore: "Hardcore", muchless: "Muchos menos",
+          less: "Menos", more: "Más", muchmore: "Muchos más", most: "Máximo", none: "Ninguno" },
+  keys: { nobuildcost: "Construir gratis", playerevents: "Asaltos según cada jugador", passivemobs: "Enemigos pasivos", nomap: "Sin mapa" },
+};
+let settingsExtra = [];
+async function loadSettings() {
+  const s = await api("/api/settings");
+  const f = $("#settingsForm");
+  const preset = f.preset;
+  if (preset.options.length === 1) {
+    s.options.presets.forEach((p) => preset.add(new Option(T.presets[p] || p, p)));
+    $("#modifiers").innerHTML = Object.entries(s.options.modifiers).map(([k, vals]) =>
+      `<label>${T.mods[k]}</label><select name="mod_${k}"><option value="">Normal</option>${vals.map((v) => `<option value="${v}">${T.vals[v] || v}</option>`).join("")}</select>`).join("");
+    $("#setkeys").innerHTML = s.options.setkeys.map((k) => `<label><input type="checkbox" name="key_${k}"> ${T.keys[k]}</label>`).join("");
+  }
+  f.serverName.value = s.serverName; f.worldName.value = s.worldName; f.password.value = s.password;
+  f.crossplay.checked = s.crossplay; f.public.checked = s.public; f.bepinex.checked = s.bepinex;
+  preset.value = s.preset || "";
+  for (const k of Object.keys(s.options.modifiers)) f["mod_" + k].value = s.modifiers[k] || "";
+  for (const k of s.options.setkeys) f["key_" + k].checked = s.setkeys.includes(k);
+  if (![...f.backupsCron.options].some((o) => o.value === s.backupsCron)) f.backupsCron.add(new Option("Personalizado: " + s.backupsCron, s.backupsCron));
+  f.backupsCron.value = s.backupsCron; f.backupsMaxAge.value = s.backupsMaxAge;
+  if (![...f.restartCron.options].some((o) => o.value === s.restartCron)) f.restartCron.add(new Option("Personalizado: " + s.restartCron, s.restartCron));
+  f.restartCron.value = s.restartCron; f.updateIfIdle.checked = s.updateIfIdle;
+  settingsExtra = s.extra;
+}
+function collectSettings() {
+  const f = $("#settingsForm");
+  const modifiers = {};
+  $$("#modifiers select").forEach((s) => { if (s.value) modifiers[s.name.slice(4)] = s.value; });
+  return {
+    serverName: f.serverName.value, worldName: f.worldName.value, password: f.password.value,
+    crossplay: f.crossplay.checked, public: f.public.checked, bepinex: f.bepinex.checked,
+    preset: f.preset.value, modifiers, setkeys: $$("#setkeys input:checked").map((i) => i.name.slice(4)), extra: settingsExtra,
+    backupsCron: f.backupsCron.value, backupsMaxAge: f.backupsMaxAge.value, restartCron: f.restartCron.value, updateIfIdle: f.updateIfIdle.checked,
+  };
+}
+$("#showPass").addEventListener("click", () => { const i = $("#passInput"); i.type = i.type === "password" ? "text" : "password"; });
+$("#saveOnly").addEventListener("click", async () => {
+  try { await api("/api/settings", collectSettings()); say("Ajustes guardados. Se aplicarán la próxima vez que pulses «Guardar y aplicar».", "ok"); } catch (e) { say(e.message, "err"); }
+});
+$("#settingsForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = e.submitter;
+  if (!confirmClick(btn)) return;
+  btn.disabled = true;
+  try {
+    await api("/api/settings", collectSettings());
+    say("Guardado. Aplicando (recreando el servidor)…");
+    const r = await api("/api/settings/apply", {});
+    say("Ajustes aplicados. El servidor está arrancando de nuevo.\n" + (r.out || ""), "ok");
+  } catch (err) { say(err.message, "err"); }
+  btn.disabled = false;
+});
+
+// ---------- mods ----------
+function markRestart() { $("#restartBanner").hidden = false; }
+async function loadMods() {
+  const mods = await api("/api/mods");
+  $("#modsInstalled").innerHTML = mods.length ? mods.map((m) => `
+    <div class="mod">
+      <label class="switch" title="${m.enabled ? "Desactivar" : "Activar"}"><input type="checkbox" data-modtoggle="${esc(m.folder)}" ${m.enabled ? "checked" : ""}><span></span></label>
+      <div class="body">
+        <div class="title">${esc(m.name)} <span class="muted" style="font-weight:400">${esc(m.version)}</span> ${m.enabled ? '<span class="tag ok">activo</span>' : '<span class="tag off">desactivado</span>'}</div>
+        <div class="desc">${esc(m.description)}</div>
+        <span class="tag">${fmtBytes(m.size)}</span>${m.author ? `<span class="tag">${esc(m.author)}</span>` : ""}${m.url ? ` <a href="${esc(m.url)}" target="_blank" style="color:var(--blue);font-size:13px">Ver en Thunderstore ↗</a>` : ""}
+      </div>
+      <button class="small off" data-moddel="${esc(m.folder)}">🗑 Eliminar</button>
+    </div>`).join("") : `<div class="muted">No hay mods instalados. Búscalos abajo o sube uno.</div>`;
+  loadCfgList();
+}
+document.addEventListener("change", async (e) => {
+  const t = e.target.closest("[data-modtoggle]");
+  if (!t) return;
+  try { await api("/api/mods/toggle", { folder: t.dataset.modtoggle, enable: t.checked }); markRestart(); say(t.checked ? "Mod activado." : "Mod desactivado.", "ok"); loadMods(); }
+  catch (err) { say(err.message, "err"); t.checked = !t.checked; }
+});
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-moddel]");
+  if (!b || !confirmClick(b)) return;
+  try { await api("/api/mods/delete", { folder: b.dataset.moddel }); markRestart(); say("Mod eliminado.", "ok"); loadMods(); } catch (err) { say(err.message, "err"); }
+});
+$("#modUploadBtn").addEventListener("click", () => $("#modFile").click());
+$("#modFile").addEventListener("change", async () => {
+  const file = $("#modFile").files[0];
+  if (!file) return;
+  say("Subiendo " + file.name + "…");
+  try {
+    const r = await fetch("/api/mods/upload?name=" + encodeURIComponent(file.name), { method: "POST", body: file });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    markRestart(); say("Instalado: " + d.installed.join(", "), "ok"); loadMods();
+  } catch (err) { say(err.message, "err"); }
+  $("#modFile").value = "";
+});
+
+async function tsSearch() {
+  $("#tsInfo").textContent = "Buscando… (la primera vez descarga el catálogo de Thunderstore, puede tardar ~30 s)";
+  $("#tsResults").innerHTML = "";
+  try {
+    const d = await api(`/api/thunderstore?q=${encodeURIComponent($("#tsQuery").value)}&cat=${encodeURIComponent($("#tsCat").value)}`);
+    const sel = $("#tsCat");
+    if (sel.options.length === 1) d.categories.forEach((c) => sel.add(new Option(c, c)));
+    $("#tsInfo").textContent = `${d.total} mods encontrados${d.total > 60 ? " (mostrando los 60 más descargados)" : ""} · catálogo del ${fmtDate(d.cachedAt)}`;
+    $("#tsResults").innerHTML = d.results.map((p) => `
+      <div class="mod">
+        <img src="${esc(p.icon)}" alt="" loading="lazy">
+        <div class="body">
+          <div class="title">${esc(p.name.replace(/_/g, " "))} <span class="muted" style="font-weight:400">${esc(p.version)} · por ${esc(p.owner)}</span></div>
+          <div class="desc">${esc(p.desc)}</div>
+          ${p.cats.map((c) => `<span class="tag ${/server/i.test(c) ? "gold" : ""}">${esc(c)}</span>`).join("")}
+          <span class="tag">⬇ ${p.downloads.toLocaleString(LOCALE)}</span>
+          ${p.deps.filter((x) => !x.startsWith("denikson-BepInExPack")).length ? `<span class="tag">+ ${p.deps.filter((x) => !x.startsWith("denikson-BepInExPack")).length} dependencias</span>` : ""}
+          <a href="${esc(p.url)}" target="_blank" style="color:var(--blue);font-size:13px">Ver ↗</a>
+        </div>
+        ${p.installed ? '<span class="tag ok">Instalado</span>' : `<button class="small on" data-install="${esc(p.owner + "-" + p.name)}">⬇ Instalar</button>`}
+      </div>`).join("");
+  } catch (e) { $("#tsInfo").textContent = ""; say(e.message, "err"); }
+}
+$("#tsSearch").addEventListener("click", tsSearch);
+$("#tsQuery").addEventListener("keydown", (e) => { if (e.key === "Enter") tsSearch(); });
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-install]");
+  if (!b) return;
+  b.disabled = true; b.textContent = "Instalando…";
+  try {
+    const r = await api("/api/mods/install", { full: b.dataset.install });
+    say("Instalado: " + r.installed.join(", ") + "\nReinicia el servidor para cargarlo.", "ok");
+    b.outerHTML = '<span class="tag ok">Instalado</span>';
+    markRestart(); loadMods();
+  } catch (err) { say(err.message, "err"); b.disabled = false; b.textContent = "⬇ Instalar"; }
+});
+
+async function loadCfgList() {
+  const files = await api("/api/cfg");
+  const sel = $("#cfgSelect"), cur = sel.value;
+  sel.innerHTML = '<option value="">— elige un archivo —</option>' + files.map((f) => `<option>${esc(f)}</option>`).join("");
+  sel.value = files.includes(cur) ? cur : "";
+}
+$("#cfgSelect").addEventListener("change", async () => {
+  const name = $("#cfgSelect").value;
+  $("#cfgSave").disabled = !name;
+  $("#cfgText").value = name ? (await api("/api/cfg/file?name=" + encodeURIComponent(name))).text : "";
+});
+$("#cfgSave").addEventListener("click", async () => {
+  try { await api("/api/cfg/file", { name: $("#cfgSelect").value, text: $("#cfgText").value }); markRestart(); say("Configuración guardada. Reinicia para aplicarla.", "ok"); }
+  catch (e) { say(e.message, "err"); }
+});
+
+// ---------- copias ----------
+async function loadBackups() {
+  const list = await api("/api/backups");
+  $("#backupList").innerHTML = list.length ? list.map((b) => `
+    <tr><td>${esc(b.file)}</td><td>${fmtDate(b.date)}</td><td>${fmtBytes(b.size)}</td><td><div class="btns">
+      <a href="/api/backups/download?file=${encodeURIComponent(b.file)}"><button class="small info">⬇ Descargar</button></a>
+      ${b.restorable ? `<button class="small warn" data-restore="${esc(b.file)}">↩ Restaurar</button>` : ""}
+      <button class="small off" data-bdel="${esc(b.file)}">🗑</button></div></td></tr>`).join("")
+    : `<tr><td colspan="4" class="muted">Aún no hay copias. Se crean automáticamente cuando ya existe un mundo.</td></tr>`;
+}
+async function backupNow() {
+  say("Creando copia…");
+  try { const r = await api("/api/backups/create", {}); say("Copia creada: " + r.file, "ok"); loadBackups(); loadOverview(); } catch (e) { say(e.message, "err"); }
+}
+$("#backupNow").addEventListener("click", backupNow);
+document.addEventListener("click", async (e) => {
+  const r = e.target.closest("[data-restore]"), d = e.target.closest("[data-bdel]");
+  if (r) {
+    if (!confirmClick(r)) return;
+    r.disabled = true; say("Restaurando: parando el servidor y guardando el mundo actual… (puede tardar hasta 2 minutos)");
+    try { const res = await api("/api/backups/restore", { file: r.dataset.restore }); say("Copia restaurada y servidor arrancando." + (res.saved ? `\nEl mundo anterior se guardó como ${res.saved}` : ""), "ok"); }
+    catch (err) { say(err.message, "err"); }
+    r.disabled = false;
+  }
+  if (d) {
+    if (!confirmClick(d)) return;
+    try { await api("/api/backups/delete", { file: d.dataset.bdel }); loadBackups(); say("Copia borrada.", "ok"); } catch (err) { say(err.message, "err"); }
+  }
+});
+
+// ---------- registro ----------
+let logLines = [], logLast = 0;
+const NOISE = /Valheim Rcon\].*Command completed: (time|players|heal)|Update state \(0x|^\s*\^?\[?0m?$|Filesystem|overlay|DEBUG - \[\d+\] - Waiting for server/;
+async function pollLogs() {
+  try {
+    const d = await api("/api/logs?after=" + logLast);
+    if (d.last < logLast) logLines = []; // el servidor se reinició
+    logLines.push(...d.lines); logLast = d.last;
+    if (logLines.length > 3000) logLines = logLines.slice(-3000);
+    if (!$("#tab-consola").hidden && $("#logDetails").open) renderLogs();
+  } catch {}
+}
+function renderLogs() {
+  const f = $("#logFilter").value.toLowerCase(), noise = $("#logNoise").checked, box = $("#logbox");
+  const lines = logLines.filter((l) => (!f || l.t.toLowerCase().includes(f)) && !(noise && NOISE.test(l.t))).slice(-1500);
+  box.innerHTML = lines.map((l) => {
+    const cls = /join code/.test(l.t) ? "code" : /error|exception|fail/i.test(l.t) ? "err" : /ZDOID|handshake|Platform ID|Closing socket|connected/i.test(l.t) ? "conn" : /sav(ed|ing)|backup/i.test(l.t) ? "save" : "";
+    return `<div class="${cls}">${esc(l.t)}</div>`;
+  }).join("");
+  if ($("#logAuto").checked) box.scrollTop = box.scrollHeight;
+}
+$("#logFilter").addEventListener("input", renderLogs);
+$("#logNoise").addEventListener("change", renderLogs);
+$("#logDetails").addEventListener("toggle", () => { if ($("#logDetails").open) renderLogs(); });
+
+// ---------- arranque ----------
+startLive(); loadOverview(); loadLists().catch(() => {}); pollLogs();
+setInterval(loadOverview, 60000);
+setInterval(() => loadLists().catch(() => {}), 30000);
+setInterval(pollLogs, 3000);
+try { const t = localStorage.getItem("vhTab"); if (t) openTab(t); } catch {}
+</script>
+<script src="/items.js"></script>
+<script src="/extra.js"></script>
+</body>
+</html>

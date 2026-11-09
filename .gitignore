@@ -1,0 +1,15 @@
+# Your own configuration (contains passwords) — copy the *.example files instead
+.env
+valheim.env
+
+# Server data: worlds, backups, downloaded game files, mods, panel state
+data/
+
+# Misc
+node_modules/
+*.zip
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
